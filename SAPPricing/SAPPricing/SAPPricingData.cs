@@ -95,11 +95,11 @@ namespace SAPPricing
             }
             catch (Exception ex)
             {
-                var errorLog = new ErrorLogEntity();
-                errorLog.PipeLineName = "Pricing";
-                errorLog.ParentNodeName = "FilterSegments_save";
-                errorLog.ErrorMessage = ex.Message;
-                SaveErrorLogData(errorLog);
+                //var errorLog = new ErrorLogEntity();
+                //errorLog.PipeLineName = "Pricing";
+                //errorLog.ParentNodeName = "FilterSegments_save";
+                //errorLog.ErrorMessage = ex.Message;
+                //SaveErrorLogData(errorLog);
                 Logger logger = new Logger(_configuration);
                 logger.ErrorLogData(ex, ex.Message);
                 return 0;
@@ -161,11 +161,11 @@ namespace SAPPricing
             }
             catch (Exception ex)
             {
-                var errorLog = new ErrorLogEntity();
-                errorLog.PipeLineName = "Pricing";
-                errorLog.ParentNodeName = "ConditionItems_Select";
-                errorLog.ErrorMessage = ex.Message;
-                SaveErrorLogData(errorLog);
+                //var errorLog = new ErrorLogEntity();
+                //errorLog.PipeLineName = "Pricing";
+                //errorLog.ParentNodeName = "ConditionItems_Select";
+                //errorLog.ErrorMessage = ex.Message;
+                //SaveErrorLogData(errorLog);
                 Logger logger = new Logger(_configuration);
                 logger.ErrorLogData(ex, ex.Message);
                 return null;
@@ -228,11 +228,11 @@ namespace SAPPricing
             }
             catch (Exception ex)
             {
-                var errorLog = new ErrorLogEntity();
-                errorLog.PipeLineName = "Pricing";
-                errorLog.ParentNodeName = "ConditionItems_Select_Over";
-                errorLog.ErrorMessage = ex.Message;
-                SaveErrorLogData(errorLog);
+                //var errorLog = new ErrorLogEntity();
+                //errorLog.PipeLineName = "Pricing";
+                //errorLog.ParentNodeName = "ConditionItems_Select_Over";
+                //errorLog.ErrorMessage = ex.Message;
+                //SaveErrorLogData(errorLog);
                 Logger logger = new Logger(_configuration);
                 logger.ErrorLogData(ex, ex.Message);
                 return null;
@@ -294,39 +294,39 @@ namespace SAPPricing
             }
             catch (Exception ex)
             {
-                var errorLog = new ErrorLogEntity();
-                errorLog.PipeLineName = "Pricing";
-                errorLog.ParentNodeName = "ConditionItems_Save";
-                errorLog.ErrorMessage = ex.Message;
-                SaveErrorLogData(errorLog);
+                //var errorLog = new ErrorLogEntity();
+                //errorLog.PipeLineName = "Pricing";
+                //errorLog.ParentNodeName = "ConditionItems_Save";
+                //errorLog.ErrorMessage = ex.Message;
+                //SaveErrorLogData(errorLog);
                 Logger logger = new Logger(_configuration);
                 logger.ErrorLogData(ex, ex.Message);
                 return 0;
             }
         }
        
-        public void SaveErrorLogData(ErrorLogEntity errorLogData)
-        {
-            try
-            {
-                SqlConnection con = new SqlConnection(_configuration["DatabaseConnectionString"]);
-                SqlCommand cmd = new SqlCommand("ErrorLogDetails_save", con);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@PipeLineName", errorLogData.PipeLineName);
-                cmd.Parameters.AddWithValue("@FileName", errorLogData.FileName);
-                cmd.Parameters.AddWithValue("@ParentNodeName", errorLogData.ParentNodeName);
-                cmd.Parameters.AddWithValue("@ErrorMessage", errorLogData.ErrorMessage);
-                con.Open();
-                cmd.ExecuteNonQuery();
-                con.Close();
+        //public void SaveErrorLogData(ErrorLogEntity errorLogData)
+        //{
+        //    try
+        //    {
+        //        SqlConnection con = new SqlConnection(_configuration["DatabaseConnectionString"]);
+        //        SqlCommand cmd = new SqlCommand("ErrorLogDetails_save", con);
+        //        cmd.CommandType = CommandType.StoredProcedure;
+        //        cmd.Parameters.AddWithValue("@PipeLineName", errorLogData.PipeLineName);
+        //        cmd.Parameters.AddWithValue("@FileName", errorLogData.FileName);
+        //        cmd.Parameters.AddWithValue("@ParentNodeName", errorLogData.ParentNodeName);
+        //        cmd.Parameters.AddWithValue("@ErrorMessage", errorLogData.ErrorMessage);
+        //        con.Open();
+        //        cmd.ExecuteNonQuery();
+        //        con.Close();
 
 
-            }
-            catch (Exception ex)
-            {
-                Logger logger = new Logger(_configuration);
-                logger.ErrorLogData(ex, ex.Message);
-            }
-        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Logger logger = new Logger(_configuration);
+        //        logger.ErrorLogData(ex, ex.Message);
+        //    }
+        //}
     }
 }
