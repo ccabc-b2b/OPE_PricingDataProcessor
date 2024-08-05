@@ -70,12 +70,19 @@ namespace SAPPricing
                     }
                 foreach (var blobDetails in blobList)
                     {
-
                     CheckRequiredFields(blobDetails, container);
-
                     }
                 }
             catch (StorageException ex)
+                {
+                //var errorLog = new ErrorLogEntity();
+                //errorLog.PipeLineName = "Pricing";
+                //errorLog.ErrorMessage = ex.Message;
+                //pricingData.SaveErrorLogData(errorLog);
+                Logger logger = new Logger(_configuration);
+                logger.ErrorLogData(ex, ex.Message);
+                }
+            catch (Exception ex)
                 {
                 //var errorLog = new ErrorLogEntity();
                 //errorLog.PipeLineName = "Pricing";
@@ -300,7 +307,6 @@ namespace SAPPricing
                         conditions.IsDeleted = isDeleted.ToString();
                         conditionItemsList.Add(conditions);
                         }
-
                     }
                 }
                 return conditionItemsList;
