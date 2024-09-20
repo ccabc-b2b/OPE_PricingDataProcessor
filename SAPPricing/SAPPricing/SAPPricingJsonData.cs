@@ -41,6 +41,8 @@ namespace SAPPricing
                 var blobListDirectory = list[0].ListBlobs().OfType<CloudBlobDirectory>().ToList();
                 int batchsize =Convert.ToInt32(_configuration["BatchSize"]);
 
+
+
                 foreach (var blobDirectory in blobListDirectory)
                     {
                     if (blobDirectory.Prefix == blobDirectoryPrefix)
@@ -50,15 +52,12 @@ namespace SAPPricing
                             {
                             //if (sapPricingCount != 1000)
                             //{
-                            Logger _logger = new Logger(_configuration);
-                            _logger.ErrorLogData(null, blobFile.Name);
+                            Console.WriteLine("Filename : " + blobFile.Name);
                             BlobEntity blobDetails = new BlobEntity();
                             string[] blobName = blobFile.Name.Split(new char[] { '/' });
                             string[] filename = blobName[2].Split(new char[] { '.' });
-                            _logger.ErrorLogData(null, blobName[2]);
                             string[] fileDateTime = filename[0].Split(new char[] { '_' });
                             string fileCreatedDateTime = fileDateTime[1] + fileDateTime[2];
-                            _logger.ErrorLogData(null, fileCreatedDateTime);
                             string formatString = "yyyyMMddHHmmss";
                             CloudBlockBlob blockBlob = container.GetBlockBlobReference(blobFile.Name);
                             blobDetails.Blob = blockBlob;
@@ -74,10 +73,11 @@ namespace SAPPricing
                                 blobList = blobList.OrderByDescending(x => x.FileCreatedDate.Date).ThenByDescending(x => x.FileCreatedDate.TimeOfDay).ToList();
                                 foreach (var blobs in blobList)
                                     {
+                                    Console.WriteLine("Starting " + blobs.FileName + " Proccess");
                                     CheckRequiredFields(blobs, container);
                                     Logger logger = new Logger(_configuration);
-                                    logger.ErrorLogData(null,blobs.FileName);
-                                    Console.WriteLine(blobs.FileName);
+                                    logger.ErrorLogData (null,blobs.FileName);
+                                    Console.WriteLine("File "+blobs.FileName+" Proccessed");
                                     }
                                 sapPricingCount = 0;
                                 blobList.Clear();
