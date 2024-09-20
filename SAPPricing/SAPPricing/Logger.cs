@@ -18,26 +18,26 @@ namespace SAPPricing
         public async void ErrorLogData(Exception ex, string errorMessage)
             {
             var channel = new InMemoryChannel();
-            try
+                try
                 {
-                IServiceCollection services = new ServiceCollection();
-                services.Configure<TelemetryConfiguration>(config => config.TelemetryChannel = channel);
-                services.AddLogging(builder =>
-                {
-                    builder.AddApplicationInsights(
-                        configureTelemetryConfiguration: (config) => config.ConnectionString = _configuration["AppInsightsConnectionString"],
-                        configureApplicationInsightsLoggerOptions: (options) => { }
-                    );
-                });
-                IServiceProvider serviceProvider = services.BuildServiceProvider();
-                ILogger<Program> logger = serviceProvider.GetRequiredService<ILogger<Program>>();
-                logger.LogError(ex, errorMessage);
+                    IServiceCollection services = new ServiceCollection();
+                    services.Configure<TelemetryConfiguration>(config => config.TelemetryChannel = channel);
+                    services.AddLogging(builder =>
+                    {
+                        builder.AddApplicationInsights(
+                            configureTelemetryConfiguration: (config) => config.ConnectionString = _configuration["AppInsightsConnectionString"],
+                            configureApplicationInsightsLoggerOptions: (options) => { }
+                        );
+                    });
+                    IServiceProvider serviceProvider = services.BuildServiceProvider();
+                    ILogger<Program> logger = serviceProvider.GetRequiredService<ILogger<Program>>();
+                    logger.LogError(ex, errorMessage);
                 }
-            finally
+                finally
                 {
-                channel.Flush();
-                await Task.Delay(TimeSpan.FromMilliseconds(1000));
-                System.Environment.Exit(0);
+                    channel.Flush();
+                    await Task.Delay(TimeSpan.FromMilliseconds(1000));
+                    System.Environment.Exit(0);
                 }
             }
         }

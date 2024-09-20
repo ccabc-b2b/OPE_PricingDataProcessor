@@ -24,7 +24,6 @@ namespace SAPPricing
                 IConfiguration configuration = builder.Build();
                 Logger logger = new Logger(configuration);
                 logger.ErrorLogData(ex, ex.Message);
-
             }
         }
     }

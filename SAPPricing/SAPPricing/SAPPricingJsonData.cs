@@ -12,23 +12,23 @@ using System.Linq;
 namespace SAPPricing
     {
     public class SAPPricingJsonData
-    {
+        {
         readonly string containerName = Properties.Settings.Default.ContainerName;
         readonly string blobDirectoryPrefix = Properties.Settings.Default.BlobDirectoryPrefix;
         readonly string destblobDirectoryPrefix = Properties.Settings.Default.DestDirectory;
         private static IConfiguration _configuration;
         private SAPPricingData pricingData;
         public SAPPricingJsonData(IConfiguration configuration)
-        {
+            {
             _configuration = configuration;
             pricingData = new SAPPricingData(_configuration);
-        }
- 
+            }
+
         public void LoadPricingData()
-        {
+            {
 
             try
-            {
+                {
                 List<BlobEntity> blobList = new List<BlobEntity>();
                 var storageKey = _configuration["StorageKey"];
 
@@ -39,19 +39,20 @@ namespace SAPPricing
                 var list = container.ListBlobs().OfType<CloudBlobDirectory>().ToList();
 
                 var blobListDirectory = list[0].ListBlobs().OfType<CloudBlobDirectory>().ToList();
+                int batchsize =Convert.ToInt32(_configuration["BatchSize"]);
 
                 foreach (var blobDirectory in blobListDirectory)
-                {
-                    if (blobDirectory.Prefix == blobDirectoryPrefix)
                     {
-                        //int sapPricingCount = 0;
-                        foreach (var blobFile in blobDirectory.ListBlobs().OfType<CloudBlockBlob>())
+                    if (blobDirectory.Prefix == blobDirectoryPrefix)
                         {
+                        int sapPricingCount = 0;
+                        foreach (var blobFile in blobDirectory.ListBlobs().OfType<CloudBlockBlob>())
+                            {
                             //if (sapPricingCount != 1000)
                             //{
                             BlobEntity blobDetails = new BlobEntity();
                             string[] blobName = blobFile.Name.Split(new char[] { '/' });
-                            string[] filename = blobName[2].Split(new char[] { '.' }); 
+                            string[] filename = blobName[2].Split(new char[] { '.' });
                             string[] fileDateTime = filename[0].Split(new char[] { '_' });
                             string fileCreatedDateTime = fileDateTime[1] + fileDateTime[2];
                             string formatString = "yyyyMMddHHmmss";
@@ -63,65 +64,84 @@ namespace SAPPricing
                             blobDetails.BlobName = blobFile.Name;
 
                             blobList.Add(blobDetails);
-                           
-                        }
-                        blobList = blobList.OrderByDescending(x => x.FileCreatedDate.Date).ThenByDescending(x => x.FileCreatedDate.TimeOfDay).ToList();
+                            sapPricingCount++;
+                            if (sapPricingCount == batchsize)
+                                {
+                                blobList = blobList.OrderByDescending(x => x.FileCreatedDate.Date).ThenByDescending(x => x.FileCreatedDate.TimeOfDay).ToList();
+                                foreach (var blobs in blobList)
+                                    {
+                                    CheckRequiredFields(blobs, container);
+                                    Logger logger = new Logger(_configuration);
+                                    logger.ErrorLogData(null,blobs.FileName);
+                                    Console.WriteLine(blobs.FileName);
+                                    }
+                                sapPricingCount = 0;
+                                blobList.Clear();
+                                }
+                            }
+                        } 
+                    }
+                foreach (var blobDetails in blobList)
+                    {
+                    CheckRequiredFields(blobDetails, container);
                     }
                 }
-                foreach (var blobDetails in blobList)
-                {
-
-                    CheckRequiredFields(blobDetails, container);
-
-                }
-            }
             catch (StorageException ex)
-            {
-                var errorLog = new ErrorLogEntity();
-                errorLog.PipeLineName = "Pricing";
-                errorLog.ErrorMessage = ex.Message;
-                pricingData.SaveErrorLogData(errorLog);
+                {
+                //var errorLog = new ErrorLogEntity();
+                //errorLog.PipeLineName = "Pricing";
+                //errorLog.ErrorMessage = ex.Message;
+                //pricingData.SaveErrorLogData(errorLog);
                 Logger logger = new Logger(_configuration);
                 logger.ErrorLogData(ex, ex.Message);
+                }
+            catch (Exception ex)
+                {
+                //var errorLog = new ErrorLogEntity();
+                //errorLog.PipeLineName = "Pricing";
+                //errorLog.ErrorMessage = ex.Message;
+                //pricingData.SaveErrorLogData(errorLog);
+                Logger logger = new Logger(_configuration);
+                logger.ErrorLogData(ex, ex.Message);
+                }
             }
-        }
 
         public void CheckRequiredFields(BlobEntity blobDetails, CloudBlobContainer container)
-        {
-            try
             {
+            try
+                {
                 List<string> errors = new List<string>();
                 if (string.IsNullOrEmpty(blobDetails.FileData))
-                {
+                    {
                     blobDetails.Status = "Error";
-                    var errorLog = new ErrorLogEntity();
-                    errorLog.PipeLineName = "Pricing";
-                    errorLog.FileName = blobDetails.FileName;
-                    errorLog.ErrorMessage = "File is empty";
-                    pricingData.SaveErrorLogData(errorLog);
+                    //var errorLog = new ErrorLogEntity();
+                    //errorLog.PipeLineName = "Pricing";
+                    //errorLog.FileName = blobDetails.FileName;
+                    //errorLog.ErrorMessage = "File is empty";
+                    //pricingData.SaveErrorLogData(errorLog);
                     Logger logger = new Logger(_configuration);
                     logger.ErrorLogData(null, "File is empty");
-                }
+                    }
                 else
-                {
-                    SAPPricing pricingdataList = JsonConvert.DeserializeObject<SAPPricing>(blobDetails.FileData, new JsonSerializerSettings
                     {
+                    SAPPricing pricingdataList = JsonConvert.DeserializeObject<SAPPricing>(blobDetails.FileData, new JsonSerializerSettings
+                        {
                         Error = delegate (object sender, ErrorEventArgs args)
                         {
                             errors.Add(args.ErrorContext.Error.Message);
                             args.ErrorContext.Handled = true;
-                        },
+                            },
                         Converters = { new IsoDateTimeConverter() }
-                    });
+                        });
                     Dictionary<string, int> returnData = new Dictionary<string, int>();
                     if (pricingdataList.payload == null)
                         {
                         returnData.Add("Pricing", 0);
-                        var errorLog = new ErrorLogEntity();
-                        errorLog.PipeLineName = "Pricing";
-                        errorLog.FileName = blobDetails.FileName;
-                        errorLog.ErrorMessage ="Payload is null";
-                        pricingData.SaveErrorLogData(errorLog);
+                        //var errorLog = new ErrorLogEntity();
+                        //errorLog.PipeLineName = "Pricing";
+                        //errorLog.FileName = blobDetails.FileName;
+                        //errorLog.ErrorMessage = "Payload is null";
+                        //pricingData.SaveErrorLogData(errorLog);
                         Logger logger = new Logger(_configuration);
                         logger.ErrorLogData(null, errors[0]);
                         }
@@ -133,11 +153,11 @@ namespace SAPPricing
                             if (pricingdata == null)
                                 {
                                 blobDetails.Status = "Error";
-                                var errorLog = new ErrorLogEntity();
-                                errorLog.PipeLineName = "Pricing";
-                                errorLog.FileName = blobDetails.FileName;
-                                errorLog.ErrorMessage = errors[0];
-                                pricingData.SaveErrorLogData(errorLog);
+                                //var errorLog = new ErrorLogEntity();
+                                //errorLog.PipeLineName = "Pricing";
+                                //errorLog.FileName = blobDetails.FileName;
+                                //errorLog.ErrorMessage = errors[0];
+                                //pricingData.SaveErrorLogData(errorLog);
                                 Logger logger = new Logger(_configuration);
                                 logger.ErrorLogData(null, errors[0]);
                                 }
@@ -175,89 +195,9 @@ namespace SAPPricing
                                             }
 
 
-                                        foreach (var e1KONH in E1KONH_List_Disitnct)
-                                            {
-                                            var IdList = new List<Int64>();
-                                            var conditionItem = pricingData.ConditionItemSelect(e1KONH.ConditionRecordNumber, pricingdata.ConditionType, pricingdata.VariableKey);
-                                            foreach (var conditions in conditionItem)
-                                                {
-                                                IdList.Add(conditions.Id);
-                                                var isDeleted = '1';
-                                                conditions.IsDeleted = isDeleted.ToString();
-                                                conditionItemsList.Add(conditions);
-                                                }
-                                            var conditionItem_Master = pricingData.ConditionItemSelectOver(pricingdata.ConditionType, pricingdata.VariableKey, e1KONH.ConditionValidFromDate, e1KONH.ConditionValidToDate);
+                                        conditionItemsList = AddConditionItem(E1KONH_List_Disitnct,pricingdata,conditionItemsList);
 
-                                            foreach (var conditions in conditionItem_Master)
-                                                {
-                                                if (!IdList.Contains(conditions.Id))
-                                                    {
-                                                    var isDeleted = '1';
-                                                    conditions.IsDeleted = isDeleted.ToString();
-                                                    conditionItemsList.Add(conditions);
-                                                    }
-
-                                                }
-
-                                            }
-
-                                        foreach (var E1KONH in E1KONH_List)
-                                            {
-                                            if (E1KONH.E1KONP != null && E1KONH.E1KONP.Count > 0)
-                                                {
-                                                // Check E1KONW
-                                                var deleteFlag = 'X';
-                                                foreach (var item in E1KONH.E1KONP)
-                                                    {
-
-                                                    if (item.DeletionIndicatorForConditionItem == deleteFlag.ToString())
-                                                        {
-                                                        var isDeleted = '1';
-                                                        var E1KONP = item;
-                                                        E1KONP.ConditionRecordNumber = E1KONH.ConditionRecordNumber;
-                                                        E1KONP.ConditionType = pricingdata.ConditionType;
-                                                        E1KONP.VariableKey = pricingdata.VariableKey;
-                                                        E1KONP.ConditionValidFromDate = E1KONH.ConditionValidFromDate;
-                                                        E1KONP.ConditionValidToDate = E1KONH.ConditionValidToDate;
-                                                        E1KONP.IsDeleted = isDeleted.ToString();
-                                                        conditionItemsList.Add(E1KONP);
-                                                        }
-                                                    else
-                                                        {
-                                                        if (!string.IsNullOrEmpty(E1KONH.ConditionValidFromDate) && !string.IsNullOrEmpty(E1KONH.ConditionValidToDate))
-                                                            {
-                                                            var isDeleted = '0';
-                                                            var E1KONP = item;
-                                                            E1KONP.ConditionRecordNumber = E1KONH.ConditionRecordNumber;
-                                                            E1KONP.ConditionType = pricingdata.ConditionType;
-                                                            E1KONP.VariableKey = pricingdata.VariableKey;
-                                                            E1KONP.ConditionValidFromDate = E1KONH.ConditionValidFromDate;
-                                                            E1KONP.ConditionValidToDate = E1KONH.ConditionValidToDate;
-                                                            E1KONP.IsDeleted = isDeleted.ToString();
-                                                            E1KONP.E1KONW = item.E1KONW;
-                                                            if (!string.IsNullOrEmpty(E1KONP.ScaleType))
-                                                                {
-                                                                conditionItemsList.Add(E1KONP);
-                                                                }
-                                                            else
-                                                                {
-                                                                blobDetails.Status = "Error";
-                                                                var errorLog = new ErrorLogEntity();
-                                                                errorLog.PipeLineName = "Pricing";
-                                                                errorLog.FileName = blobDetails.FileName;
-                                                                errorLog.ParentNodeName = "chechRequiredField";
-                                                                errorLog.ErrorMessage = "ScaleType is null";
-                                                                pricingData.SaveErrorLogData(errorLog);
-                                                                Logger logger = new Logger(_configuration);
-                                                                logger.ErrorLogData(null, errorLog.ErrorMessage);
-                                                                break;
-                                                                }
-                                                            }
-                                                        }
-
-                                                    }
-                                                }
-                                            }
+                                        conditionItemsList = DeleteConditionItem(E1KONH_List_Disitnct,pricingdata,conditionItemsList,blobDetails);
 
 
                                         foreach (var E1KONH in conditionItemsList)
@@ -286,10 +226,11 @@ namespace SAPPricing
                                         {
                                         blobDetails.Status = "Error";
                                         var errorLog = new ErrorLogEntity();
-                                        errorLog.PipeLineName = "Pricing";
-                                        errorLog.FileName = blobDetails.FileName;
-                                        errorLog.ParentNodeName = returnvalue.Key;
-                                        pricingData.SaveErrorLogData(errorLog);
+                                        //errorLog.PipeLineName = "Pricing";
+                                        //errorLog.FileName = blobDetails.FileName;
+                                        //errorLog.ParentNodeName = returnvalue.Key;
+                                        errorLog.ErrorMessage = pricingdata.ConditionRecordNumber.ToString() + " is not proccessed";
+                                        //pricingData.SaveErrorLogData(errorLog);
                                         Logger logger = new Logger(_configuration);
                                         logger.ErrorLogData(null, errorLog.ErrorMessage);
                                         break;
@@ -303,30 +244,30 @@ namespace SAPPricing
                             }
                         }
 
-                }
+                    }
 
                 var destDirectory = destblobDirectoryPrefix + DateTime.Now.Year + "/" + DateTime.Now.Month + "/" + DateTime.Now.Day;
                 MoveFile(blobDetails, container, destDirectory);
-            }
+                }
             catch (Exception ex)
-            {
-                var errorLog = new ErrorLogEntity();
-                errorLog.PipeLineName = "Pricing";
-                errorLog.ParentNodeName = "CheckRequiredFields";
-                errorLog.ErrorMessage = ex.Message;
-                errorLog.FileName = blobDetails.FileName;
-                pricingData.SaveErrorLogData(errorLog);
+                {
+                //var errorLog = new ErrorLogEntity();
+                //errorLog.PipeLineName = "Pricing";
+                //errorLog.ParentNodeName = "CheckRequiredFields";
+                //errorLog.ErrorMessage = ex.Message;
+                //errorLog.FileName = blobDetails.FileName;
+                //pricingData.SaveErrorLogData(errorLog);
                 blobDetails.Status = "Error";
                 var destDirectory = destblobDirectoryPrefix + DateTime.Now.Year + "/" + DateTime.Now.Month + "/" + DateTime.Now.Day;
                 MoveFile(blobDetails, container, destDirectory);
+                }
             }
-        }
 
         public void MoveFile(BlobEntity blob, CloudBlobContainer destContainer, string destDirectory)
-        {
+            {
             CloudBlockBlob destBlob;
             try
-            {
+                {
                 if (blob.Blob == null)
                     throw new Exception("Source blob cannot be null.");
 
@@ -343,18 +284,106 @@ namespace SAPPricing
                 destBlob.StartCopy(blob.Blob);
                 //remove source blob after copy is done.
                 blob.Blob.Delete();
-            }
+                }
             catch (Exception ex)
-            {
-                var errorLog = new ErrorLogEntity();
-                errorLog.PipeLineName = "Pricing";
-                errorLog.FileName = blob.FileName;
-                errorLog.ParentNodeName = "Pricing move";
-                errorLog.ErrorMessage = ex.Message;
-                pricingData.SaveErrorLogData(errorLog);
+                {
+                //var errorLog = new ErrorLogEntity();
+                //errorLog.PipeLineName = "Pricing";
+                //errorLog.FileName = blob.FileName;
+                //errorLog.ParentNodeName = "Pricing move";
+                //errorLog.ErrorMessage = ex.Message;
+                //pricingData.SaveErrorLogData(errorLog);
                 Logger logger = new Logger(_configuration);
                 logger.ErrorLogData(ex, ex.Message);
+                }
+            }
+        public List<ConditionItemsEntity> AddConditionItem (List<ConditionRecordsEntity> E1KONH_List_Disitnct,FilterSegmentsEntity pricingdata, List<ConditionItemsEntity> conditionItemsList)
+            {
+            foreach (var e1KONH in E1KONH_List_Disitnct)
+                {
+                var IdList = new List<Int64>();
+                var conditionItem = pricingData.ConditionItemSelect(e1KONH.ConditionRecordNumber, pricingdata.ConditionType, pricingdata.VariableKey);
+                foreach (var conditions in conditionItem)
+                    {
+                    IdList.Add(conditions.Id);
+                    var isDeleted = '1';
+                    conditions.IsDeleted = isDeleted.ToString();
+                    conditionItemsList.Add(conditions);
+                    }
+                var conditionItem_Master = pricingData.ConditionItemSelectOver(pricingdata.ConditionType, pricingdata.VariableKey, e1KONH.ConditionValidFromDate, e1KONH.ConditionValidToDate);
+
+                foreach (var conditions in conditionItem_Master)
+                    {
+                    if (!IdList.Contains(conditions.Id))
+                        {
+                        var isDeleted = '1';
+                        conditions.IsDeleted = isDeleted.ToString();
+                        conditionItemsList.Add(conditions);
+                        }
+                    }
+                }
+                return conditionItemsList;
+            }
+        public List<ConditionItemsEntity> DeleteConditionItem(List<ConditionRecordsEntity> E1KONH_List, FilterSegmentsEntity pricingdata, List<ConditionItemsEntity> conditionItemsList, BlobEntity blobDetails)
+            {
+            foreach (var E1KONH in E1KONH_List)
+                {
+                if (E1KONH.E1KONP != null && E1KONH.E1KONP.Count > 0)
+                    {
+                    // Check E1KONW
+                    var deleteFlag = 'X';
+                    foreach (var item in E1KONH.E1KONP)
+                        {
+
+                        if (item.DeletionIndicatorForConditionItem == deleteFlag.ToString())
+                            {
+                            var isDeleted = '1';
+                            var E1KONP = item;
+                            E1KONP.ConditionRecordNumber = E1KONH.ConditionRecordNumber;
+                            E1KONP.ConditionType = pricingdata.ConditionType;
+                            E1KONP.VariableKey = pricingdata.VariableKey;
+                            E1KONP.ConditionValidFromDate = E1KONH.ConditionValidFromDate;
+                            E1KONP.ConditionValidToDate = E1KONH.ConditionValidToDate;
+                            E1KONP.IsDeleted = isDeleted.ToString();
+                            conditionItemsList.Add(E1KONP);
+                            }
+                        else
+                            {
+                            if (!string.IsNullOrEmpty(E1KONH.ConditionValidFromDate) && !string.IsNullOrEmpty(E1KONH.ConditionValidToDate))
+                                {
+                                var isDeleted = '0';
+                                var E1KONP = item;
+                                E1KONP.ConditionRecordNumber = E1KONH.ConditionRecordNumber;
+                                E1KONP.ConditionType = pricingdata.ConditionType;
+                                E1KONP.VariableKey = pricingdata.VariableKey;
+                                E1KONP.ConditionValidFromDate = E1KONH.ConditionValidFromDate;
+                                E1KONP.ConditionValidToDate = E1KONH.ConditionValidToDate;
+                                E1KONP.IsDeleted = isDeleted.ToString();
+                                E1KONP.E1KONW = item.E1KONW;
+                                if (!string.IsNullOrEmpty(E1KONP.ScaleType))
+                                    {
+                                    conditionItemsList.Add(E1KONP);
+                                    }
+                                else
+                                    {
+                                    blobDetails.Status = "Error";
+                                    //var errorLog = new ErrorLogEntity();
+                                    //errorLog.PipeLineName = "Pricing";
+                                    //errorLog.FileName = blobDetails.FileName;
+                                    //errorLog.ParentNodeName = "chechRequiredField";
+                                    //errorLog.ErrorMessage = "ScaleType is null";
+                                    //pricingData.SaveErrorLogData(errorLog);
+                                    Logger logger = new Logger(_configuration);
+                                    logger.ErrorLogData(null,"ScaleType is null");
+                                    break;
+                                    }
+                                }
+                            }
+
+                        }
+                    }
+                }
+             return conditionItemsList;
             }
         }
     }
-}
