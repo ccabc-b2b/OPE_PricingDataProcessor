@@ -50,11 +50,15 @@ namespace SAPPricing
                             {
                             //if (sapPricingCount != 1000)
                             //{
+                            Logger logger = new Logger(_configuration);
+                            logger.ErrorLogData(null, blobFile.Name);
                             BlobEntity blobDetails = new BlobEntity();
                             string[] blobName = blobFile.Name.Split(new char[] { '/' });
                             string[] filename = blobName[2].Split(new char[] { '.' });
+                            logger.ErrorLogData(null, blobName[2]);
                             string[] fileDateTime = filename[0].Split(new char[] { '_' });
                             string fileCreatedDateTime = fileDateTime[1] + fileDateTime[2];
+                            logger.ErrorLogData(null, fileCreatedDateTime);
                             string formatString = "yyyyMMddHHmmss";
                             CloudBlockBlob blockBlob = container.GetBlockBlobReference(blobFile.Name);
                             blobDetails.Blob = blockBlob;
