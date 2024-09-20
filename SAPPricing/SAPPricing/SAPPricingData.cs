@@ -313,29 +313,29 @@ namespace SAPPricing
                     }
                 }
         }
-       
-        //public void SaveErrorLogData(ErrorLogEntity errorLogData)
-        //{
-        //    try
-        //    {
-        //        SqlConnection con = new SqlConnection(_configuration["DatabaseConnectionString"]);
-        //        SqlCommand cmd = new SqlCommand("ErrorLogDetails_save", con);
-        //        cmd.CommandType = CommandType.StoredProcedure;
-        //        cmd.Parameters.AddWithValue("@PipeLineName", errorLogData.PipeLineName);
-        //        cmd.Parameters.AddWithValue("@FileName", errorLogData.FileName);
-        //        cmd.Parameters.AddWithValue("@ParentNodeName", errorLogData.ParentNodeName);
-        //        cmd.Parameters.AddWithValue("@ErrorMessage", errorLogData.ErrorMessage);
-        //        con.Open();
-        //        cmd.ExecuteNonQuery();
-        //        con.Close();
+
+        public void SaveErrorLogData(ErrorLogEntity errorLogData)
+            {
+            try
+                {
+                SqlConnection con = new SqlConnection(_configuration["DatabaseConnectionString"]);
+                SqlCommand cmd = new SqlCommand("ErrorLogDetails_save", con);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@PipeLineName", errorLogData.PipeLineName);
+                cmd.Parameters.AddWithValue("@FileName", errorLogData.FileName);
+                cmd.Parameters.AddWithValue("@ParentNodeName", errorLogData.ParentNodeName);
+                cmd.Parameters.AddWithValue("@ErrorMessage", errorLogData.ErrorMessage);
+                con.Open();
+                cmd.ExecuteNonQuery();
+                con.Close();
 
 
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Logger logger = new Logger(_configuration);
-        //        logger.ErrorLogData(ex, ex.Message);
-        //    }
-        //}
-    }
+                }
+            catch (Exception ex)
+                {
+                Logger logger = new Logger(_configuration);
+                logger.ErrorLogData(ex, ex.Message);
+                }
+            }
+        }
 }

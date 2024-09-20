@@ -39,12 +39,13 @@ namespace SAPPricing
                 var list = container.ListBlobs().OfType<CloudBlobDirectory>().ToList();
 
                 var blobListDirectory = list[0].ListBlobs().OfType<CloudBlobDirectory>().ToList();
+                int batchsize =Convert.ToInt32(_configuration["BatchSize"]);
 
                 foreach (var blobDirectory in blobListDirectory)
                     {
                     if (blobDirectory.Prefix == blobDirectoryPrefix)
                         {
-                        //int sapPricingCount = 0;
+                        int sapPricingCount = 0;
                         foreach (var blobFile in blobDirectory.ListBlobs().OfType<CloudBlockBlob>())
                             {
                             //if (sapPricingCount != 1000)
@@ -63,10 +64,22 @@ namespace SAPPricing
                             blobDetails.BlobName = blobFile.Name;
 
                             blobList.Add(blobDetails);
-
+                            sapPricingCount++;
+                            if (sapPricingCount == batchsize)
+                                {
+                                blobList = blobList.OrderByDescending(x => x.FileCreatedDate.Date).ThenByDescending(x => x.FileCreatedDate.TimeOfDay).ToList();
+                                foreach (var blobs in blobList)
+                                    {
+                                    CheckRequiredFields(blobs, container);
+                                    Logger logger = new Logger(_configuration);
+                                    logger.ErrorLogData(null,blobs.FileName);
+                                    Console.WriteLine(blobs.FileName);
+                                    }
+                                sapPricingCount = 0;
+                                blobList.Clear();
+                                }
                             }
-                        blobList = blobList.OrderByDescending(x => x.FileCreatedDate.Date).ThenByDescending(x => x.FileCreatedDate.TimeOfDay).ToList();
-                        }
+                        } 
                     }
                 foreach (var blobDetails in blobList)
                     {
