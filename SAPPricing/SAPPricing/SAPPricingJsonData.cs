@@ -69,22 +69,22 @@ namespace SAPPricing
                             blobList.Add(blobDetails);
                             sapPricingCount++;
                             if (sapPricingCount == batchsize)
-                                {
+                            {
                                 blobList = blobList.OrderByDescending(x => x.FileCreatedDate.Date).ThenByDescending(x => x.FileCreatedDate.TimeOfDay).ToList();
                                 foreach (var blobs in blobList)
-                                    {
+                                {
                                     Console.WriteLine("Starting " + blobs.FileName + " Proccess");
                                     CheckRequiredFields(blobs, container);
                                     Logger logger = new Logger(_configuration);
                                     logger.ErrorLogData (null,blobs.FileName);
                                     Console.WriteLine("File "+blobs.FileName+" Proccessed");
-                                    }
+                                }
                                 sapPricingCount = 0;
                                 blobList.Clear();
-                                }
                             }
-                        } 
-                    }
+                        }
+                    } 
+                }
                 foreach (var blobDetails in blobList)
                     {
                     CheckRequiredFields(blobDetails, container);
@@ -264,6 +264,9 @@ namespace SAPPricing
                 blobDetails.Status = "Error";
                 var destDirectory = destblobDirectoryPrefix + DateTime.Now.Year + "/" + DateTime.Now.Month + "/" + DateTime.Now.Day;
                 MoveFile(blobDetails, container, destDirectory);
+                Logger logger = new Logger(_configuration);
+                logger.ErrorLogData(ex, ex.Message);
+                logger.ErrorLogData(null, "Moved the files to container " + containerName);
                 }
             }
 
