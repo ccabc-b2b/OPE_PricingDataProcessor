@@ -49,10 +49,7 @@ namespace SAPPricing
                         {
                         int sapPricingCount = 0;
                         foreach (var blobFile in blobDirectory.ListBlobs().OfType<CloudBlockBlob>())
-                            {
-                            //if (sapPricingCount != 1000)
-                            //{
-                            Console.WriteLine("Filename : " + blobFile.Name);
+                        {                         
                             BlobEntity blobDetails = new BlobEntity();
                             string[] blobName = blobFile.Name.Split(new char[] { '/' });
                             string[] filename = blobName[2].Split(new char[] { '.' });
@@ -72,12 +69,8 @@ namespace SAPPricing
                             {
                                 blobList = blobList.OrderByDescending(x => x.FileCreatedDate.Date).ThenByDescending(x => x.FileCreatedDate.TimeOfDay).ToList();
                                 foreach (var blobs in blobList)
-                                {
-                                    Console.WriteLine("Starting " + blobs.FileName + " Proccess");
-                                    CheckRequiredFields(blobs, container);
-                                    Logger logger = new Logger(_configuration);
-                                    logger.ErrorLogData (null,blobs.FileName);
-                                    Console.WriteLine("File "+blobs.FileName+" Proccessed");
+                                {                
+                                    CheckRequiredFields(blobs, container);                                   
                                 }
                                 sapPricingCount = 0;
                                 blobList.Clear();
