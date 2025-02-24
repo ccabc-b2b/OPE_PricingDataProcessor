@@ -7,7 +7,7 @@ using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
+
 
 namespace SAPPricing
     {
@@ -171,7 +171,6 @@ namespace SAPPricing
                                     {
                                     if (pricingdata.E1KONH.Count != 0)
                                         {
-                                        
                                         var conditionItemsList = pricingdata.E1KONH;
 
                                         foreach (var E1KONH in conditionItemsList)
