@@ -171,18 +171,17 @@ namespace SAPPricing
                                     {
                                     if (pricingdata.E1KONH.Count != 0)
                                         {
-                                        //E1KONP 
-                                        //var E1KONH_List = pricingdata.E1KONH;
-                                        var conditionItemsList = pricingdata.E1KONH[0].E1KONP;
+                                        
+                                        var conditionItemsList = pricingdata.E1KONH;
 
-                                        Parallel.ForEach(conditionItemsList, E1KONH =>
-                                            {
+                                        foreach (var E1KONH in conditionItemsList)
+                                            { 
                                                 countE1KONP++;
-                                                if (E1KONH.FixedValueDate == "00000000")
+                                                if (E1KONH.E1KONP[0].FixedValueDate == "00000000")
                                                     {
-                                                    E1KONH.FixedValueDate = null;
+                                                    E1KONH.E1KONP[0].FixedValueDate = null;
                                                     }
-                                                var return_E1KONP = pricingData.SaveConditionItemsdata(E1KONH);
+                                                var return_E1KONP = pricingData.SaveConditionItemsdata(E1KONH.E1KONP[0],E1KONH,pricingdata);
                                                 returnData.Add("E1KONP" + countE1KONP, return_E1KONP);
                                                 if (return_E1KONP != 0)
                                                     {
@@ -190,7 +189,7 @@ namespace SAPPricing
                                                     var return_E1KOMG2 = pricingData.SaveFilterSegmentsdata(pricingdata);
                                                     returnData.Add("E1KOMG" + countE1KONP, return_E1KOMG2);
                                                     }
-                                            });
+                                            }
 
                                         }
                                     }
