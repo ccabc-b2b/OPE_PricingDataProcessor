@@ -246,7 +246,7 @@ namespace SAPPricing
                 }
         }
 
-        public int SaveConditionItemsdata(ConditionItemsEntity conditionItemsdata)
+        public int SaveConditionItemsdata(ConditionItemsEntity conditionItemsdata,ConditionRecordsEntity conditionRecordsEntity,FilterSegmentsEntity filterSegmentsEntity)
         {
             using (SqlConnection con = new SqlConnection(_configuration["DatabaseConnectionString"]))
                 {
@@ -254,12 +254,12 @@ namespace SAPPricing
                     {
                     SqlCommand cmd = new SqlCommand("ConditionItems_Save", con);
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@ConditionRecordNumber", conditionItemsdata.ConditionRecordNumber);
-                    cmd.Parameters.AddWithValue("@ConditionType", conditionItemsdata.ConditionType);
+                    cmd.Parameters.AddWithValue("@ConditionRecordNumber", conditionRecordsEntity.ConditionRecordNumber);
+                    cmd.Parameters.AddWithValue("@ConditionType", filterSegmentsEntity.ConditionType);
                     cmd.Parameters.AddWithValue("@ScaleType", conditionItemsdata.ScaleType);
-                    cmd.Parameters.AddWithValue("@VariableKey", conditionItemsdata.VariableKey);
-                    cmd.Parameters.AddWithValue("@ValidFrom", conditionItemsdata.ConditionValidFromDate);
-                    cmd.Parameters.AddWithValue("@ValidTo", conditionItemsdata.ConditionValidToDate);
+                    cmd.Parameters.AddWithValue("@VariableKey", filterSegmentsEntity.VariableKey);
+                    cmd.Parameters.AddWithValue("@ValidFrom", conditionRecordsEntity.ConditionValidFromDate);
+                    cmd.Parameters.AddWithValue("@ValidTo", conditionRecordsEntity.ConditionValidToDate);
                     cmd.Parameters.AddWithValue("@ConditionScaleQuantity", conditionItemsdata.ConditionScaleQuantity);
                     cmd.Parameters.AddWithValue("@ScaleValue", conditionItemsdata.ScaleValue);
                     cmd.Parameters.AddWithValue("@CalculationTypeForCondition", conditionItemsdata.CalculationTypeForCondition);
@@ -285,7 +285,7 @@ namespace SAPPricing
                     cmd.Parameters.AddWithValue("@ScaleNumberForPricing", conditionItemsdata.ScaleNumberForPricing);
                     cmd.Parameters.AddWithValue("@ConditionScaleValue", conditionItemsdata.ConditionScaleValue);
                     cmd.Parameters.AddWithValue("@ScaleBasis", conditionItemsdata.ScaleBasis);
-                    cmd.Parameters.AddWithValue("@isDeleted", conditionItemsdata.IsDeleted);
+                    cmd.Parameters.AddWithValue("@isDeleted", false);
                     cmd.Parameters.Add("@returnObj", SqlDbType.BigInt);
                     cmd.Parameters["@returnObj"].Direction = ParameterDirection.Output;
                     con.Open();

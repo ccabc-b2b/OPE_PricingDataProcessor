@@ -171,47 +171,23 @@ namespace SAPPricing
                                     {
                                     if (pricingdata.E1KONH.Count != 0)
                                         {
-                                        //E1KONP 
-                                        var E1KONH_List = pricingdata.E1KONH;
-                                        var conditionItemsList = new List<ConditionItemsEntity>();
-                                        var E1KONH_List_Disitnct = new List<ConditionRecordsEntity>();
-                                        var Disitnct_ConditionRecordNumber = new List<string>();
-                                        var conditionScaleList = new List<ConditionScaleDBEntity>();
-                                        var distCount = 0;
-                                        foreach (var condition in E1KONH_List)
-                                            {
-                                            if (E1KONH_List_Disitnct.Count == 0)
-                                                {
-                                                E1KONH_List_Disitnct.Add(condition);
-                                                }
-                                            else if (E1KONH_List_Disitnct[distCount].ConditionRecordNumber != condition.ConditionRecordNumber)
-                                                {
-                                                E1KONH_List_Disitnct.Add(condition);
-                                                distCount++;
-                                                }
-                                            }
-
-
-                                        conditionItemsList = AddConditionItem(E1KONH_List_Disitnct,pricingdata,conditionItemsList);
-
-                                        conditionItemsList = DeleteConditionItem(E1KONH_List_Disitnct,pricingdata,conditionItemsList,blobDetails);
-
+                                        var conditionItemsList = pricingdata.E1KONH;
 
                                         foreach (var E1KONH in conditionItemsList)
-                                            {
-                                            countE1KONP++;
-                                            if (E1KONH.FixedValueDate == "00000000")
-                                                {
-                                                E1KONH.FixedValueDate = null;
-                                                }
-                                            var return_E1KONP = pricingData.SaveConditionItemsdata(E1KONH);
-                                            returnData.Add("E1KONP" + countE1KONP, return_E1KONP);
-                                            if (return_E1KONP != 0)
-                                                {
-                                                pricingdata.ConditionRecordNumber = E1KONH.ConditionRecordNumber;
-                                                var return_E1KOMG2 = pricingData.SaveFilterSegmentsdata(pricingdata);
-                                                returnData.Add("E1KOMG" + countE1KONP, return_E1KOMG2);
-                                                }
+                                            { 
+                                                countE1KONP++;
+                                                if (E1KONH.E1KONP[0].FixedValueDate == "00000000")
+                                                    {
+                                                    E1KONH.E1KONP[0].FixedValueDate = null;
+                                                    }
+                                                var return_E1KONP = pricingData.SaveConditionItemsdata(E1KONH.E1KONP[0],E1KONH,pricingdata);
+                                                returnData.Add("E1KONP" + countE1KONP, return_E1KONP);
+                                                if (return_E1KONP != 0)
+                                                    {
+                                                    pricingdata.ConditionRecordNumber = E1KONH.ConditionRecordNumber;
+                                                    var return_E1KOMG2 = pricingData.SaveFilterSegmentsdata(pricingdata);
+                                                    returnData.Add("E1KOMG" + countE1KONP, return_E1KOMG2);
+                                                    }
                                             }
 
                                         }
